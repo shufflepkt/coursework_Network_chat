@@ -79,7 +79,7 @@ public class Server implements ConnectionListener {
 
     @Override
     public void onException(Connection connection, Exception e) {
-        String msg = "[" + getDateTime() + "]: " + " Сервер перестал отвечать";
+        String msg = "[" + getDateTime() + "]: " + " Клиент перестал отвечать";
         logger.log(msg);
         System.out.println(msg);
 
