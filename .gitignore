@@ -1,7 +1,6 @@
 .idea/
 target/
 src/main/java/Client2
-settings.json
 Server_file.log
 Yury_file.log
 Alex_file.log

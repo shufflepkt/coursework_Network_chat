@@ -7,32 +7,35 @@ import Settings.Settings;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class Server implements ConnectionListener {
-    private final String serverName = "Server";
-
     private static final String EXIT_MSG = "/exit";
     private static final ArrayList<Connection> connections = new ArrayList<>();
-    private Log logger;
+    private final Settings settings;
+    private final Log logger;
+    private final String serverName;
 
-    public static void main(String[] args) {
-        new Server();
+    public Server(Settings settings, String serverName) {
+        this.settings = settings;
+        this.serverName = serverName;
+        this.logger = new Log(serverName, settings.getLogFile());
     }
 
-    private Server() {
-        Settings settings = Settings.getSettings();
-        logger = new Log(serverName, settings.getLogFile());
-
-        try (ServerSocket serverSocket = new ServerSocket(8080)) {
+    public void startServer() {
+        try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(settings.getPort()))) {
             String msg = "[" + serverName + ", " + getDateTime() + "]: " + "Server started...";
             System.out.println(msg);
             logger.log(msg);
 
             while (true) {
-                new Connection(serverSocket.accept(), this);
+//              Почему если создание сокета ниже засунуть в try с ресурсами, чтобы он автоматически закрывался,
+//              работа клиента падает при отправке первого сообщения серверу?
+                Socket socket = serverSocket.accept();
+                new Connection(socket, this);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -66,9 +69,7 @@ public class Server implements ConnectionListener {
 
     @Override
     public void onGettingMsg(Connection connection, String msg) {
-        if (msg.equals(null)) {
-            return;
-        } else if (msg.equals(EXIT_MSG)) {
+        if (EXIT_MSG.equals(msg)) {
             disconnectClient(connection);
         } else {
             System.out.println(msg);

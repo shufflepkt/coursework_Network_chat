@@ -14,27 +14,21 @@ import java.util.Scanner;
 public class Client implements ConnectionListener {
     private Thread writeThread;
 
-    private String clientName;
+    private final String clientName;
 
-    private Log logger;
+    private final Log logger;
+    private final Settings settings;
 
     private static final String EXIT_MSG = "/exit";
 
-    public static void main(String[] args) {
-        new Client();
+    public Client(Settings settings, String clientName) {
+        this.settings = settings;
+        this.clientName = clientName;
+        this.logger = new Log(clientName, settings.getLogFile());
     }
 
-    private Client() {
+    public void startClient() {
         Connection connection;
-        Settings settings = Settings.getSettings();
-
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Введите свое имя");
-        clientName = scanner.nextLine();
-
-        logger = new Log(clientName, settings.getLogFile());
-
         try {
             connection = new Connection(new Socket(settings.getIp(), Integer.parseInt(settings.getPort())), this);
         } catch (IOException e) {
@@ -43,6 +37,7 @@ public class Client implements ConnectionListener {
 
         writeThread = new Thread(() -> {
             while (!writeThread.isInterrupted()) {
+                Scanner scanner = new Scanner(System.in);
                 String msg = scanner.nextLine();
                 if (EXIT_MSG.equals(msg)) {
                     disconnectClient(connection);
